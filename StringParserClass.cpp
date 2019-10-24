@@ -98,18 +98,25 @@ namespace KP_StringParserClass{
 		start = str;
 
 		std::string end(pEndTag);
-//		std::string en = "";
-//		for (int i = 0; i < start.length(); i++) {
-//			std::string character = start.substr(i,1);
-//			if (character == ">") {
-//				en += character;
-//				break;
-//			}
-//
-//			en += character;
-//		}
-//
-//		end = en;
+		std::string en = "";
+
+		for (int i = 0; i < start.length(); i++) {
+			std::string character = start.substr(i,1);
+
+			if (character == "<") {
+				en += character + "/";
+			}
+
+			if (character == ">") {
+				en += character;
+				break;
+			}
+
+			if (character != "<") {
+				en += character;
+			}
+		}
+		end = en;
 
 		std::string search = "";
 
@@ -124,6 +131,7 @@ namespace KP_StringParserClass{
 
 			if (search == start) {
 				search = "";
+				i++;
 
 				for (int j = 0; j < line.length() - i; j++) {
 					search += line.substr(i, 1);
@@ -133,13 +141,6 @@ namespace KP_StringParserClass{
 
 					if (nextChar == "<") {
 						myVector.push_back(search);
-						search = "";
-						break;
-					}
-
-					int length = line.length();
-
-					if (line[length - 1] == '>') {
 						search = "";
 						break;
 					}
@@ -183,8 +184,11 @@ namespace KP_StringParserClass{
 				searchTag += line.substr(i, 1);
 
 				if (searchTag == tag) {
-					*pStart = searchTag[0];
-					*pEnd = searchTag[searchTag.length() -1];
+					char * start = new char[searchTag.size() + 1];
+					std::copy(searchTag.begin(), searchTag.end(), start);
+					start[searchTag.size()] = '\0';
+
+					pStart = start;
 				}
 
 				if (character == ">") {
@@ -194,27 +198,27 @@ namespace KP_StringParserClass{
 				count++;
 			}
 
-//			for (int i = count; i < line.length(); i++) {
-//				std::string character = line.substr(i,1);
-//
-//				if (character == "<") {
-//					searchTag = "";
-//				}
-//
-//				searchTag += line.substr(i, 1);
-//
-//				if (searchTag == endTag) {
-//					char * end = new char[searchTag.size() + 1];
-//					std::copy(searchTag.begin(), searchTag.end(), end);
-//					end[searchTag.size()] = '\0';
-//
-//					pEnd = end;
-//				}
-//
-//				if (character == ">") {
-//					searchTag = "";
-//				}
-//			}
+			for (int i = count; i < line.length(); i++) {
+				std::string character = line.substr(i,1);
+
+				if (character == "<") {
+					searchTag = "";
+				}
+
+				searchTag += line.substr(i, 1);
+
+				if (searchTag == endTag) {
+					char * end = new char[searchTag.size() + 1];
+					std::copy(searchTag.begin(), searchTag.end(), end);
+					end[searchTag.size()] = '\0';
+
+					pEnd = end;
+				}
+
+				if (character == ">") {
+					searchTag = "";
+				}
+			}
 
 			return SUCCESS;
 		}
