@@ -16,15 +16,14 @@ namespace KP_StringParserClass{
 
 	//dont forget to initialize member variables
 	StringParserClass::StringParserClass(void) {
-		pStartTag = new char;
-		pEndTag = new char;
+		pStartTag = new char[20];
+		pEndTag = new char[20];
 		areTagsSet = false;
 	}
 
 	//call cleanup to release any allocated memory
 	StringParserClass::~StringParserClass(void) {
-		delete pStartTag;
-		delete pEndTag;
+		cleanup();
 	}
 
 	//these are the start tag and the end tags that we want to find,
@@ -74,91 +73,106 @@ namespace KP_StringParserClass{
 			return ERROR_TAGS_NULL;
 		}
 
-		myVector.clear();
-
 		if (pDataToSearchThru == NULL) {
 			return ERROR_DATA_NULL;
 		}
 
-		std::string line(pDataToSearchThru);
-		std::string start(pStartTag);
-		std::string str;
+		myVector.clear();
 
-		for (int i = 0; i < start.length(); i++) {
-			std::string character = start.substr(i,1);
-			if (character == ">") {
+		char *pEndCopy = new char;
+
+		int i = 0;
+		while (*(pEndTag + i) != '>') {
+			*(pEndCopy + i) = *(pEndTag + i);
+			i++;
+		}
+		*(pEndCopy + i) = *(pEndTag + i);
+
+		if (findTag(pStartTag, pDataToSearchThru, pEndCopy) == SUCCESS) {
+			std::string line(pDataToSearchThru);
+			std::string start(pStartTag);
+			std::string str;
+			for (int i = 0; i < start.length(); i++) {
+				std::string character = start.substr(i,1);
+				if (character == ">") {
+					str += character;
+					break;
+				}
 				str += character;
-				break;
 			}
-			str += character;
-		}
+			start = str;
 
-		start = str;
+			std::string end(pEndTag);
+			std::string en = "";
+			for (int i = 0; i < start.length(); i++) {
+				std::string character = start.substr(i,1);
 
-		std::string end(pEndTag);
-		std::string en = "";
+				if (character == "<") {
+					en += character + "/";
+				}
 
-		for (int i = 0; i < start.length(); i++) {
-			std::string character = start.substr(i,1);
+				if (character == ">") {
+					en += character;
+					break;
+				}
 
-			if (character == "<") {
-				en += character + "/";
-			}
-
-			if (character == ">") {
-				en += character;
-				break;
-			}
-
-			if (character != "<") {
-				en += character;
-			}
-		}
-		end = en;
-
-		std::string search = "";
-
-		for (int i = 0; i < line.length(); i++) {
-			std::string character = line.substr(i,1);
-
-			if (character == "<") {
-				search = "";
-			}
-
-			search += line.substr(i, 1);
-
-			if (search == start) {
-				search = "";
-				i++;
-				std::string nextChar = "";
-
-				while (nextChar != "<") {
-					search += line.substr(i, 1);
-					i++;
-
-					nextChar = line.substr(i,1);
-
-					if (nextChar == "<") {
-						nextChar = line.substr(i+1, 1);
-						if (nextChar == "/") {
-							myVector.push_back(search);
-							search = "";
-							break;
-						}
-						break;
-					}
+				if (character != "<") {
+					en += character;
 				}
 			}
+			end = en;
 
-			if (character == ">") {
-				search = "";
+			std::string search = "";
+			for (int i = 0; i < line.length(); i++) {
+				std::string character = line.substr(i,1);
+
+				if (character == "<") {
+					search = "";
+				}
+
+				search += line.substr(i, 1);
+
+				if (search == start) {
+					search = "";
+					i++;
+					std::string nextChar = "";
+
+					while (nextChar != "<") {
+						search += line.substr(i, 1);
+						i++;
+
+						nextChar = line.substr(i,1);
+
+						if (nextChar == "<") {
+							nextChar = line.substr(i+1, 1);
+							if (nextChar == "/") {
+								myVector.push_back(search);
+								search = "";
+								break;
+							}
+							break;
+						}
+					}
+				}
+
+				if (character == ">") {
+					search = "";
+				}
 			}
 		}
 
-		return SUCCESS;
+	return SUCCESS;
 	}
 
 	void StringParserClass::cleanup() {
+		if (pStartTag != 0) {
+			delete[] pStartTag;
+		}
+
+		if (pEndTag != 0) {
+			delete[] pEndTag;
+		}
+
 	}
 
 	//Searches a string starting at pStart for pTagToLookFor
@@ -173,8 +187,8 @@ namespace KP_StringParserClass{
 			bool foundTag = false;
 
 			std::string tg = "";
-			for (int i = 0; i < line.length(); i++) {
-				std::string character = line.substr(i,1);
+			for (int i = 0; i < tag.length(); i++) {
+				std::string character = tag.substr(i,1);
 				if (character == ">") {
 					tg += character;
 					break;
@@ -200,11 +214,12 @@ namespace KP_StringParserClass{
 
 				if (searchTag == tag) {
 					foundTag = true;
-					char * start = new char[searchTag.size() + 1];
+					char * start = new char[line.size() - i];
+					searchTag += line.substr(i+1, line.length() - i);
 					std::copy(searchTag.begin(), searchTag.end(), start);
 					start[searchTag.size()] = '\0';
-
 					pStart = start;
+					break;
 				}
 
 				if (character == ">") {
@@ -229,11 +244,13 @@ namespace KP_StringParserClass{
 				searchTag += line.substr(i, 1);
 
 				if (searchTag == endTag) {
+
 					char * end = new char[searchTag.size() + 1];
 					std::copy(searchTag.begin(), searchTag.end(), end);
 					end[searchTag.size()] = '\0';
 
 					pEnd = end;
+					break;
 				}
 
 				if (character == ">") {
