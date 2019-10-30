@@ -16,13 +16,17 @@ namespace KP_StringParserClass{
 
 	//dont forget to initialize member variables
 	StringParserClass::StringParserClass(void) {
+		//Creates char array pointers for the start and end tag
 		pStartTag = new char[20];
 		pEndTag = new char[20];
+		//Sets areTagsSet to false as the arrays are empty
 		areTagsSet = false;
 	}
 
 	//call cleanup to release any allocated memory
 	StringParserClass::~StringParserClass(void) {
+		//Calls cleanup to delete the pointers
+		//Is called when StringParserClass object goes out of scope
 		cleanup();
 	}
 
@@ -34,14 +38,12 @@ namespace KP_StringParserClass{
 	//SUCCESS
 	//ERROR_TAGS_NULL if either pStart or pEnd is null
 	int StringParserClass::setTags(const char *pStart, const char *pEnd) {
-		if (pStart == 0 || *pStart == '\0') {
+		//Checks to see if the pStart or pEnd pointer is null
+		if (pStart == 0 || pEnd == 0) {
 			return ERROR_TAGS_NULL;
 		}
 
-		if (pEnd == 0 || *pEnd == '\0') {
-			return ERROR_TAGS_NULL;
-		}
-
+		//Does a deep copy of the pStart and pEnd tags
 		int i = 0;
 		while (*(pStart + i) != '>') {
 			*(pStartTag + i) = *(pStart + i);
@@ -56,6 +58,7 @@ namespace KP_StringParserClass{
 		}
 		*(pEndTag + i) = *(pEnd + i);
 
+		//Sets areTagsSet to true as the tags are now set
 		areTagsSet = true;
 
 		return SUCCESS;
@@ -69,18 +72,20 @@ namespace KP_StringParserClass{
 	//ERROR_TAGS_NULL if either pStart or pEnd is null
 	//ERROR_DATA_NULL pDataToSearchThru is null
 	int StringParserClass::getDataBetweenTags(char *pDataToSearchThru, std::vector<std::string> &myVector) {
+		//Checks to see if the tags are set before getting the data
 		if (!areTagsSet) {
 			return ERROR_TAGS_NULL;
 		}
 
+		//Checks to see if pDataToSearchThru is null before parsing
 		if (pDataToSearchThru == NULL) {
 			return ERROR_DATA_NULL;
 		}
 
 		myVector.clear();
 
-		char *pEndCopy = new char;
-
+		//Creates a deep copy of the end tag to see if the tags are in the data
+		char *pEndCopy = new char[20];
 		int i = 0;
 		while (*(pEndTag + i) != '>') {
 			*(pEndCopy + i) = *(pEndTag + i);
@@ -88,8 +93,12 @@ namespace KP_StringParserClass{
 		}
 		*(pEndCopy + i) = *(pEndTag + i);
 
+		//If the tags are not in the data then avoids parsing
 		if (findTag(pStartTag, pDataToSearchThru, pEndCopy) == SUCCESS) {
 			std::string line(pDataToSearchThru);
+
+			//Makes a string of the tag and makes sure there is no irrelevant data
+			//In the start tag
 			std::string start(pStartTag);
 			std::string str;
 			for (int i = 0; i < start.length(); i++) {
@@ -102,6 +111,8 @@ namespace KP_StringParserClass{
 			}
 			start = str;
 
+			//Makes a string of the tag and makes sure there is no irrelevant data
+			//In the end tag
 			std::string end(pEndTag);
 			std::string en = "";
 			for (int i = 0; i < start.length(); i++) {
@@ -122,21 +133,29 @@ namespace KP_StringParserClass{
 			}
 			end = en;
 
+			//Searches for the data between the tags
 			std::string search = "";
 			for (int i = 0; i < line.length(); i++) {
 				std::string character = line.substr(i,1);
 
+				//If the character of the line is the start of a tag
+				//Resets the search string
 				if (character == "<") {
 					search = "";
 				}
 
+				//Adds the character of the line to the search string
 				search += line.substr(i, 1);
 
+				//If the search equals the start tag then start extracting
+				//the data
 				if (search == start) {
 					search = "";
 					i++;
 					std::string nextChar = "";
 
+					//Keeps getting data until the next char is the start
+					//Of the end tag
 					while (nextChar != "<") {
 						search += line.substr(i, 1);
 						i++;
@@ -155,6 +174,8 @@ namespace KP_StringParserClass{
 					}
 				}
 
+				//If character is equal to the end of a tag
+				//Then reset the search for finding the start tag
 				if (character == ">") {
 					search = "";
 				}
@@ -165,10 +186,14 @@ namespace KP_StringParserClass{
 	}
 
 	void StringParserClass::cleanup() {
+		//If the pStartTag is not null
+		//Then delete the pStartTag pointer
 		if (pStartTag != 0) {
 			delete[] pStartTag;
 		}
 
+		//If the pStartTag is not null
+		//Then delete the pEndTag pointer
 		if (pEndTag != 0) {
 			delete[] pEndTag;
 		}
@@ -181,11 +206,13 @@ namespace KP_StringParserClass{
 	//FAIL did not find pTagToLookFor and pEnd points to 0
 	//ERROR_TAGS_NULL if either pStart or pEnd is null
 	int StringParserClass::findTag(char *pTagToLookFor, char *&pStart, char *&pEnd) {
+		//If the pStart and pEnd is not null then look for the tag
 		if (pStart != 0 && pEnd != 0) {
 			std::string line(pStart);
 			std::string tag(pTagToLookFor);
 			bool foundTag = false;
 
+			//Makes the string of a tag without erroneous data
 			std::string tg = "";
 			for (int i = 0; i < tag.length(); i++) {
 				std::string character = tag.substr(i,1);
@@ -197,21 +224,27 @@ namespace KP_StringParserClass{
 			}
 			tag = tg;
 
+			//Makes a string of the end tag
 			std::string endTag = "</" + tag.substr(1, tag.length() - 2) + ">";
 
 			std::string searchTag = "";
 
 			int count = 0;
 
+			//Starts looking for the start tag
 			for (int i = 0; i < line.length(); i++) {
 				std::string character = line.substr(i,1);
 
+				//If the next character of the data is the start of a tag
+				//Reset the searchTag
 				if (character == "<") {
 					searchTag = "";
 				}
 
 				searchTag += line.substr(i, 1);
 
+				//If the searchTag is equal to the desired tag then make pStart
+				//Point to the start tag and break out of the loop
 				if (searchTag == tag) {
 					foundTag = true;
 					char * start = new char[line.size() - i];
@@ -222,6 +255,8 @@ namespace KP_StringParserClass{
 					break;
 				}
 
+				//If the next character in the data is the end of a tag
+				//Reset the searchTag
 				if (character == ">") {
 					searchTag = "";
 				}
@@ -229,20 +264,26 @@ namespace KP_StringParserClass{
 				count++;
 			}
 
+			//If the start tag is not found then return fail
 			if (!foundTag) {
 				pEnd = 0;
 				return FAIL;
 			}
 
+			//Looks for the end tag in the data
 			for (int i = count; i < line.length(); i++) {
 				std::string character = line.substr(i,1);
 
+				//If the next character equals the start of a tag
+				//Reset the searchTag
 				if (character == "<") {
 					searchTag = "";
 				}
 
 				searchTag += line.substr(i, 1);
 
+				//If the searchTag equals the end tag then
+				//Make the pEnd point to the tag
 				if (searchTag == endTag) {
 
 					char * end = new char[searchTag.size() + 1];
@@ -253,6 +294,8 @@ namespace KP_StringParserClass{
 					break;
 				}
 
+				//If the next character equals the end of a tag
+				//Then reset the searchTag
 				if (character == ">") {
 					searchTag = "";
 				}
