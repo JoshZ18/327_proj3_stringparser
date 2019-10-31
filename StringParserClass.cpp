@@ -94,95 +94,31 @@ namespace KP_StringParserClass{
 		*(pEndCopy + i) = *(pEndTag + i);
 
 		//If the tags are not in the data then avoids parsing
-		if (findTag(pStartTag, pDataToSearchThru, pEndCopy) == SUCCESS) {
-			std::string line(pDataToSearchThru);
+		while (findTag(pStartTag, pDataToSearchThru, pEndCopy) == SUCCESS) {
+			pDataToSearchThru++;
+			std::string data = "";
+			char character;
+			char nextChar;
+			while (character != '<') {
+				 character = *pDataToSearchThru;
 
-			//Makes a string of the tag and makes sure there is no irrelevant data
-			//In the start tag
-			std::string start(pStartTag);
-			std::string str;
-			int startLen = start.length();
+				 pDataToSearchThru++;
 
-			for (int i = 0; i < startLen; i++) {
-				std::string character = start.substr(i,1);
-				if (character == ">") {
-					str += character;
-					break;
-				}
-				str += character;
-			}
-			start = str;
+				 if (character == '<') {
+					 character = *pDataToSearchThru;
+					 nextChar = *pDataToSearchThru;
+					 if (nextChar == '/') {
+						 myVector.push_back(data);
+						 break;
+					 }
+					 break;
+				 }
 
-			//Makes a string of the tag and makes sure there is no irrelevant data
-			//In the end tag
-			std::string end(pEndTag);
-			std::string en = "";
-			int endLen = end.length();
-			for (int i = 0; i < endLen; i++) {
-				std::string character = start.substr(i,1);
+				 data += character;
 
-				if (character == "<") {
-					en += character + "/";
-				}
-
-				if (character == ">") {
-					en += character;
-					break;
-				}
-
-				if (character != "<") {
-					en += character;
-				}
-			}
-			end = en;
-
-			//Searches for the data between the tags
-			std::string search = "";
-			int lineLen = line.length();
-			for (int i = 0; i < lineLen; i++) {
-				std::string character = line.substr(i,1);
-
-				//If the character of the line is the start of a tag
-				//Resets the search string
-				if (character == "<") {
-					search = "";
-				}
-
-				//Adds the character of the line to the search string
-				search += line.substr(i, 1);
-
-				//If the search equals the start tag then start extracting
-				//the data
-				if (search == start) {
-					search = "";
-					i++;
-					std::string nextChar = "";
-
-					//Keeps getting data until the next char is the start
-					//Of the end tag
-					while (nextChar != "<") {
-						search += line.substr(i, 1);
-						i++;
-
-						nextChar = line.substr(i,1);
-
-						if (nextChar == "<") {
-							nextChar = line.substr(i+1, 1);
-							if (nextChar == "/") {
-								myVector.push_back(search);
-								search = "";
-								break;
-							}
-							break;
-						}
-					}
-				}
-
-				//If character is equal to the end of a tag
-				//Then reset the search for finding the start tag
-				if (character == ">") {
-					search = "";
-				}
+				 if (character == '>') {
+					 data = "";
+				 }
 			}
 		}
 
@@ -212,99 +148,71 @@ namespace KP_StringParserClass{
 	int StringParserClass::findTag(char *pTagToLookFor, char *&pStart, char *&pEnd) {
 		//If the pStart and pEnd is not null then look for the tag
 		if (pStart != 0 && pEnd != 0) {
-			std::string line(pStart);
-			std::string tag(pTagToLookFor);
+			char *tag = pTagToLookFor;
+			char *pStartCopy = pStart;
 			bool foundTag = false;
 
-			//Makes the string of a tag without erroneous data
-			std::string tg = "";
-			int tagLength = tag.length();
-			for (int i = 0; i < tagLength; i++) {
-				std::string character = tag.substr(i,1);
-				if (character == ">") {
-					tg += character;
-					break;
-				}
-				tg += character;
-			}
-			tag = tg;
+			while (!foundTag) {
+				if (*pStart == *pTagToLookFor) {
+					pStartCopy = pStart;
 
-			//Makes a string of the end tag
-			std::string endTag = "</" + tag.substr(1, tag.length() - 2) + ">";
+					while (*pTagToLookFor != '>') {
+						if (*pStart != *pTagToLookFor) {
+							pTagToLookFor = tag;
+							break;
+						}
+						pStart++;
+						pTagToLookFor++;
+					}
 
-			std::string searchTag = "";
+					if (*pStart == '>') {
+						foundTag = true;
+						pStart = pStartCopy;
+						pTagToLookFor = tag;
+						break;
+					}
 
-			int count = 0;
-			int length = line.length();
-
-			//Starts looking for the start tag
-			for (int i = 0; i < length; i++) {
-				std::string character = line.substr(i,1);
-
-				//If the next character of the data is the start of a tag
-				//Reset the searchTag
-				if (character == "<") {
-					searchTag = "";
+					tag = pTagToLookFor;
 				}
 
-				searchTag += line.substr(i, 1);
-
-				//If the searchTag is equal to the desired tag then make pStart
-				//Point to the start tag and break out of the loop
-				if (searchTag == tag) {
-					foundTag = true;
-					char * start = new char[line.size() - i];
-					searchTag += line.substr(i+1, line.length() - i);
-					std::copy(searchTag.begin(), searchTag.end(), start);
-					start[searchTag.size()] = '\0';
-					pStart = start;
-					break;
+				if (*pStart == '\0') {
+					return FAIL;
 				}
 
-				//If the next character in the data is the end of a tag
-				//Reset the searchTag
-				if (character == ">") {
-					searchTag = "";
-				}
-
-				count++;
+				pStart++;
 			}
 
-			//If the start tag is not found then return fail
-			if (!foundTag) {
-				pEnd = 0;
-				return FAIL;
-			}
+			char *searchEnd = pStart;
+			bool foundEnd = false;
 
-			//Looks for the end tag in the data
-			for (int i = count; i < length; i++) {
-				std::string character = line.substr(i,1);
+			while (!foundEnd) {
+				if (*searchEnd != '<') {
+					char *searchEndCopy = searchEnd;
+					searchEnd++;
+					if (*searchEnd != '/') {
+						break;
+					}
 
-				//If the next character equals the start of a tag
-				//Reset the searchTag
-				if (character == "<") {
-					searchTag = "";
+					searchEnd++;
+					while (*searchEnd != '>') {
+						if (*searchEnd != *pTagToLookFor) {
+							pTagToLookFor = tag;
+							break;
+						}
+						searchEnd++;
+						pTagToLookFor++;
+					}
+
+					if (*searchEnd == '>') {
+						pEnd = searchEndCopy;
+						foundEnd = true;
+						break;
+					}
+
+					tag = pTagToLookFor;
 				}
 
-				searchTag += line.substr(i, 1);
-
-				//If the searchTag equals the end tag then
-				//Make the pEnd point to the tag
-				if (searchTag == endTag) {
-
-					char * end = new char[searchTag.size() + 1];
-					std::copy(searchTag.begin(), searchTag.end(), end);
-					end[searchTag.size()] = '\0';
-
-					pEnd = end;
-					break;
-				}
-
-				//If the next character equals the end of a tag
-				//Then reset the searchTag
-				if (character == ">") {
-					searchTag = "";
-				}
+				searchEnd++;
 			}
 
 			return SUCCESS;
