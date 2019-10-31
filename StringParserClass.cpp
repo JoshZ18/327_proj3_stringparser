@@ -101,7 +101,9 @@ namespace KP_StringParserClass{
 			//In the start tag
 			std::string start(pStartTag);
 			std::string str;
-			for (int i = 0; i < start.length(); i++) {
+			int startLen = start.length();
+
+			for (int i = 0; i < startLen; i++) {
 				std::string character = start.substr(i,1);
 				if (character == ">") {
 					str += character;
@@ -115,7 +117,8 @@ namespace KP_StringParserClass{
 			//In the end tag
 			std::string end(pEndTag);
 			std::string en = "";
-			for (int i = 0; i < start.length(); i++) {
+			int endLen = end.length();
+			for (int i = 0; i < endLen; i++) {
 				std::string character = start.substr(i,1);
 
 				if (character == "<") {
@@ -135,7 +138,8 @@ namespace KP_StringParserClass{
 
 			//Searches for the data between the tags
 			std::string search = "";
-			for (int i = 0; i < line.length(); i++) {
+			int lineLen = line.length();
+			for (int i = 0; i < lineLen; i++) {
 				std::string character = line.substr(i,1);
 
 				//If the character of the line is the start of a tag
@@ -214,7 +218,8 @@ namespace KP_StringParserClass{
 
 			//Makes the string of a tag without erroneous data
 			std::string tg = "";
-			for (int i = 0; i < tag.length(); i++) {
+			int tagLength = tag.length();
+			for (int i = 0; i < tagLength; i++) {
 				std::string character = tag.substr(i,1);
 				if (character == ">") {
 					tg += character;
@@ -230,9 +235,10 @@ namespace KP_StringParserClass{
 			std::string searchTag = "";
 
 			int count = 0;
+			int length = line.length();
 
 			//Starts looking for the start tag
-			for (int i = 0; i < line.length(); i++) {
+			for (int i = 0; i < length; i++) {
 				std::string character = line.substr(i,1);
 
 				//If the next character of the data is the start of a tag
@@ -271,7 +277,7 @@ namespace KP_StringParserClass{
 			}
 
 			//Looks for the end tag in the data
-			for (int i = count; i < line.length(); i++) {
+			for (int i = count; i < length; i++) {
 				std::string character = line.substr(i,1);
 
 				//If the next character equals the start of a tag
