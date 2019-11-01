@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <string>
-#include <string.h>
 
 #include "../327_proj3_test/includes/StringParserClass.h"
 #include "../327_proj3_test/includes/constants.h"
@@ -17,8 +16,9 @@ namespace KP_StringParserClass{
 	//dont forget to initialize member variables
 	StringParserClass::StringParserClass(void) {
 		//Creates char array pointers for the start and end tag
-		pStartTag = new char[20];
-		pEndTag = new char[20];
+		pStartTag = new char;
+		pEndTag = new char;
+
 		//Sets areTagsSet to false as the arrays are empty
 		areTagsSet = false;
 	}
@@ -94,48 +94,49 @@ namespace KP_StringParserClass{
 		*(pEndCopy + i) = *(pEndTag + i);
 
 		//If the tags are not in the data then avoids parsing
+		//Runs until no start and end tag are found
 		while (findTag(pStartTag, pDataToSearchThru, pEndCopy) == SUCCESS) {
 			pDataToSearchThru++;
 			std::string data = "";
-			char character;
-			char nextChar;
-			while (character != '<') {
-				 character = *pDataToSearchThru;
+			//Attempts to add data from char pointer until it is at the end tag
+			while (*pDataToSearchThru != '<') {
+				pDataToSearchThru++;
 
-				 pDataToSearchThru++;
+				//If the *pDataToSearchThru equals the start of the end tag
+				if (*pDataToSearchThru == '<') {
+					pDataToSearchThru++;
+					//Makes sure that it is an end tag before adding data
+					if (*pDataToSearchThru == '/') {
+						myVector.push_back(data);
+						break;
+					}
+					break;
+				}
 
-				 if (character == '<') {
-					 character = *pDataToSearchThru;
-					 nextChar = *pDataToSearchThru;
-					 if (nextChar == '/') {
-						 myVector.push_back(data);
-						 break;
-					 }
-					 break;
-				 }
+				data += *pDataToSearchThru;
 
-				 data += character;
-
-				 if (character == '>') {
-					 data = "";
-				 }
+				//If the *pDataToSearchThru equals the end of a tag
+				//Resets the data
+				if (*pDataToSearchThru == '>') {
+					data = "";
+				}
 			}
 		}
 
-	return SUCCESS;
+		return SUCCESS;
 	}
 
 	void StringParserClass::cleanup() {
 		//If the pStartTag is not null
 		//Then delete the pStartTag pointer
 		if (pStartTag != 0) {
-			delete[] pStartTag;
+			delete pStartTag;
 		}
 
 		//If the pStartTag is not null
 		//Then delete the pEndTag pointer
 		if (pEndTag != 0) {
-			delete[] pEndTag;
+			delete pEndTag;
 		}
 
 	}
@@ -176,6 +177,7 @@ namespace KP_StringParserClass{
 				}
 
 				if (*pStart == '\0') {
+					pEnd = 0;
 					return FAIL;
 				}
 
